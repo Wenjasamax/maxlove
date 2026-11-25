@@ -1,0 +1,275 @@
+!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#090b10">
+<title>Люблю тебя</title>
+<style>
+:root{--bg:#09080d;--text:#f7dce8;--muted:#c9a6b5;--gold:#e7a9c2;--pou:#e8a9c2}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text)}
+body{font-family:Georgia,'Times New Roman',serif}
+#scene{position:fixed;inset:0;overflow:hidden;background:#09080d;isolation:isolate}
+#fireflies{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.gift-scene{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:17px;transition:opacity .55s ease,transform .65s ease;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
+.gift-scene.hidden{opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.82)}
+.gift-prompt{color:var(--text);font:normal clamp(24px,6.5vw,34px)/1.2 Georgia,'Times New Roman',serif;letter-spacing:.015em;text-align:center;white-space:nowrap}
+.gift-button{position:relative;border:0;padding:0;background:transparent;color:var(--gold);cursor:pointer;display:block;font:600 clamp(13px,3.1vw,17px)/1.05 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;text-align:center;filter:drop-shadow(0 5px 14px rgba(0,0,0,.22));}
+.gift-button:focus-visible{outline:1px solid var(--gold);outline-offset:12px;border-radius:8px}
+.ascii-gift{margin:0;color:#df9fba;font:600 clamp(4.3px,1.56vw,10.4px)/1.12 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:0;text-align:left;white-space:pre;transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .55s ease,filter .55s ease;filter:drop-shadow(0 0 8px rgba(223,159,186,.13))}
+.gift-scene.open .ascii-gift{transform:translateY(-12px) scale(1.06);opacity:.0;filter:drop-shadow(0 0 24px rgba(239,170,202,.5))}
+@media(max-width:390px){.ascii-gift{font-size:4.1px}}
+.gift-lid{display:block;transform-origin:18% 100%;transition:transform .55s cubic-bezier(.2,.8,.2,1);}
+.gift-base{display:block;color:#df9fba;}
+.gift-scene.open .gift-lid{transform:translateY(-15px) rotate(-13deg)}
+.gift-scene.open .gift-base{color:#e0c18c}
+.gift-scene.open{filter:drop-shadow(0 0 16px rgba(231,169,194,.2))}
+.pou-wrap{position:absolute;z-index:1;left:0;right:0;top:39%;width:100%;display:flex;justify-content:center;align-items:center;transform:translateY(-50%) scale(.15);opacity:0;pointer-events:none;text-align:center}
+.pou-wrap.show{opacity:1;animation:assemble 1.45s cubic-bezier(.18,.75,.28,1.12) forwards}
+.pou-wrap.float{opacity:1;transform:translateY(-50%);animation:float 4.8s ease-in-out infinite}
+.pou-wrap{flex-direction:column;gap:10px;pointer-events:auto}
+.ascii-heart{position:relative;z-index:4;margin:0;color:#f0a8c7;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;font:600 clamp(9px,2.5vw,16px)/1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:0;text-align:center;white-space:pre;text-shadow:0 0 10px rgba(240,168,199,.22)}
+.ascii-pou{display:inline-block;margin:0;color:#e8a9c2;font:600 clamp(5.2px,1.55vw,12px)/1.18 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:0;text-align:left;white-space:pre;text-shadow:none;-webkit-font-smoothing:antialiased}
+.ascii-pou .edge{color:rgba(232,169,194,.2)}.ascii-pou .body{color:#e8a9c2}
+.ascii-pou{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transform-origin:center center;transition:transform .16s ease}
+.ascii-pou.blink{animation:pouReact .62s cubic-bezier(.2,.8,.2,1)}
+@keyframes pouReact{0%{transform:translateY(0) scale(1)}18%{transform:translateY(-3px) scale(1.025,1.035)}42%{transform:translateY(0) scale(.99,1.015)}68%{transform:translateY(-1px) scale(1.012)}100%{transform:translateY(0) scale(1)}}
+.mouth-pop{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%) scale(.2);opacity:0;color:#f8c4d8;font:700 clamp(10px,2.5vw,18px)/1 ui-monospace,monospace;pointer-events:none;text-shadow:0 0 8px rgba(248,196,216,.5)}
+.mouth-pop.show{animation:mouthPop .55s ease forwards}
+@keyframes mouthPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.5)}100%{opacity:0;transform:translate(-50%,-35%) scale(.7)}}
+.heart-particle{position:fixed;z-index:20;pointer-events:none;color:#f3a9c8;font:700 12px ui-monospace,monospace;text-shadow:0 0 8px rgba(243,169,200,.7);animation:heartFly .85s ease-out forwards}
+@keyframes heartFly{to{transform:translate(var(--dx),var(--dy)) rotate(160deg) scale(.2);opacity:0}}
+.ascii-heart.popped{animation:heartPop .28s cubic-bezier(.2,.8,.3,1) forwards;pointer-events:none}
+.ascii-heart.returning{animation:heartReturn .95s cubic-bezier(.16,1.35,.35,1) both}
+@keyframes heartPop{35%{transform:scale(1.55) rotate(8deg)}100%{transform:scale(.05) rotate(-18deg);opacity:0}}
+@keyframes heartReturn{0%{opacity:0;transform:translateY(12px) scale(.15) rotate(-22deg);filter:blur(4px)}55%{opacity:1;transform:translateY(-4px) scale(1.22) rotate(7deg);filter:blur(0);text-shadow:0 0 18px rgba(240,168,199,.75)}78%{transform:translateY(2px) scale(.94) rotate(-3deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0);text-shadow:0 0 10px rgba(240,168,199,.22)}}
+.caption{position:absolute;z-index:2;left:0;right:0;top:56%;bottom:3%;padding:8px 18px 20px;text-align:center;overflow-y:auto;overscroll-behavior:contain;opacity:0;transform:translateY(12px);color:#f1b8cf;font:normal clamp(17px,4.7vw,23px)/1.55 Georgia,'Times New Roman',serif;letter-spacing:.015em;transition:opacity 1.15s ease,transform 1.15s ease;scrollbar-width:none}
+.caption::-webkit-scrollbar{display:none}
+.caption{scroll-behavior:smooth}
+.scroll-progress{position:sticky;top:0;z-index:10;width:min(220px,65%);height:2px;padding:0;background:#09080d;margin:0 auto 30px;border-radius:2px;overflow:hidden;box-sizing:border-box;box-shadow:0 0 0 9px #09080d}
+.scroll-progress i{display:block;width:100%;height:2px;background:#e8a9c2;transform:scaleX(0);transform-origin:left center;box-shadow:0 0 5px rgba(232,169,194,.4);transition:transform .12s linear}
+.caption .reveal{opacity:.28;transform:translateY(13px);filter:blur(2px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1),filter .65s ease}
+.caption .reveal.in-view{opacity:1;transform:translateY(0);filter:blur(0)}
+.caption .compliments{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;margin:0 auto 8px;text-align:center}.caption .compliments span{display:block;width:100%;text-align:center}.caption .long-love{display:block;overflow-wrap:anywhere;word-break:break-word;font-size:.92em;line-height:1.45;margin:4px auto 0;max-width:100%}
+.caption .sign{display:block;margin-top:18px;font-size:.9em;color:#d99bb5}
+@media(max-height:650px){.caption{top:52%;font-size:16px}.pou-wrap{top:31%}}
+.caption.visible{opacity:1;transform:translateY(0)}
+@keyframes assemble{0%{transform:translateY(-50%) scale(.15);opacity:0}20%{opacity:1}72%{transform:translateY(-50%) scale(1.035)}100%{transform:translateY(-50%) scale(1);opacity:1}}
+@keyframes float{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 8px))}}
+@media(max-height:650px){.pou-wrap{top:36%}.ascii-pou{font-size:clamp(4.8px,1.35vw,10px)}.caption{top:50%;bottom:8%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="scene">
+ <canvas id="fireflies"></canvas>
+ <div class="gift-scene" id="giftScene">
+  <div class="gift-prompt">Нажми меня</div>
+  <button class="gift-button" id="giftButton" aria-label="Открыть подарок">
+<pre class="ascii-gift">                                                                                       
+                                                                                       
+                                                                                       
+                                      ----:                                            
+                             *+==-=---------                                            
+                            **#*+--------=-----         ===----::.                     
+                       +    +*#*+=========-------:   ========----::::                  
+                  ===========+##*+==+++===--------:+=======-----=====--                
+                 +======------=+**+++*+------::--==+======--=    ****+=-               
+                ++++==--=****+=--++=+*+=------------------::--  +*##*+=-               
+                +++++-=******#*+*+==+**+==+**+=-----------=++=-==+++*=--:              
+               ***++=-+++++++**##****###******=---::::::::-----=====-==----------=     
+             ===++*+=-==++++++*#****#**%%#**++=:..........:---==-:-==========+**##*    
+          ####*****#*=--=++++*****##%%#####**+=--------------:::-========++**#####*    
+       #*********##%%%*+=-----=+****##**###**+==-----======------====----+########*    
+     #***********#######**++==++++++++++**##***+++++++***++++++++==---===+########*    
+    #*********************=============+*################*+++++****+=====+########*    
+    #********************+:::::::----+****########*******++++***###*=====+########*    
+    #********************+:::--:----=*******************+***#######*=====+########*    
+    #********************+:---------=********************+*########*=====+########*    
+    #********************+:---------=********############*#########*=====+########*    
+    #********************+:-------=-=#***################*#########*=====+#######*     
+    #********************+:-------=-=####################*#########*=====+#####**      
+    ##*******************+:------==-=####################*#########*====+*#####**      
+     %%##################+-----====-=####################*#########*===+#######**      
+       #*****############*==========+#############################++===+#######**      
+       #********##########+-=++***+++#%%%%%%######################+====+#########      
+       #********##########+-=========*#################%%#########+====+#########      
+       #**********########+-=========*############################+====+#########      
+       #********##########+-=========*############################+====+#########      
+       #******############+-=========*############################+====+#########      
+       #****##############*-=========*############################+====+#########      
+       #***###############*-=========*############################+====+#########      
+       #**################*==========*############################+====+#########      
+       ##*################*==========*############################+====+#########      
+       ###################*==========*############################+====+#########      
+       ###################*==========*############################+====+#########      
+       ###################*==========*############################+====+########       
+       ###################*==========*############################+====+######         
+       ###################*=+++++++==*############################+====+##             
+       ###################*++++++++==*############################+=++++               
+          %%%%%%%%%%%%#%%%#++++++++==*############################+++*                 
+                         #****+++++++*%#########################                       
+                               #####**%  %%%%%%%%%%%%%#######                          
+                                                     %%%%                              
+                                                                                       
+                                                                                       </pre>
+  </button>
+ </div>
+ <div class="pou-wrap" id="pou" aria-label="Pou в ASCII стиле">
+<pre class="ascii-heart" id="heart" role="button" tabindex="0" aria-label="Лопнуть сердечко">  .:::.   .:::.
+ :::::::.:::::::
+ :::::::::::::::
+  '::::::::::'
+    ':::::'
+      '::'</pre>
+<span class="mouth-pop" id="mouthPop">●</span>
+<pre class="ascii-pou" id="asciiArt">+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++%@%@@#++++++#@@%@@*++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++**       :%++%:       **++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++*=          %%          =*+++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++@    #@@.   --    @@#    @+++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++@   :@@@@   .:   @@@@-   @+++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++%     -.    ++    .-     %+++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++#         :#*-         *++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++%%*     .%----#.     +%%++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++*@----=++=--------=++=----@*++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++*#--------------------------#*+++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++*#----------------------------#*++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++#%-----=%-----------------------##+++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++*#------+#------------------------**++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++%--------%@@@----------------------%++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++@=----------------------------------=@+++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++*%------------------------------------#*++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++%=------------------------------------=%++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++%+------------------------------------=%++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++*@------------------------------------@*++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++%=---------------------------------%*+++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++#@=----------------------------=@#+++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++#%%#+=-----------------+#%%#*+++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++*##%%%%%%##*++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</pre>
+ </div>
+ <div class="caption" id="caption"></div>
+</div>
+<script>
+const art=document.getElementById('asciiArt');
+const originalPou=art.textContent;
+const cleanArt=originalPou.split('\n').map(line=>line.replace(/\+/g,' ')).join('\n');
+art.innerHTML=cleanArt.split('').map(ch=>ch==='\n'?'\n':`<span class=\"body\">${ch==='&'?'&amp;':ch==='<'?'&lt;':ch==='>'?'&gt;':ch}</span>`).join('');
+const giftScene=document.getElementById('giftScene');
+const giftButton=document.getElementById('giftButton');
+const pou=document.getElementById('pou');
+const caption=document.getElementById('caption');
+const heart=document.getElementById('heart');
+const mouthPop=document.getElementById('mouthPop');
+const compliments=['красивая','милая','любимая','невероятная','неповторимая','родная','восхитительная','прекрасная','лучшая','очаровательная','желанная','бесценная','уютная'];
+const longO='о'.repeat(420);
+caption.innerHTML=`<div class="scroll-progress" aria-hidden="true"><i id="scrollProgressFill"></i></div><span class="reveal">Саша, ты самая</span><div class="compliments">${compliments.map((word,i)=>`<span class="reveal" style="transition-delay:${Math.min(i*35,280)}ms">${word}</span>`).join('')}</div><span class="reveal">я тебя</span><span class="long-love reveal">${longO}чень сильно люблю</span><span class="sign reveal">от максима</span>`;
+const revealObserver=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting)entry.target.classList.add('in-view');}}, {root:caption,threshold:.12});
+caption.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
+const progressFill=()=>{const max=caption.scrollHeight-caption.clientHeight;const ratio=max>0?caption.scrollTop/max:0;const fill=document.getElementById('scrollProgressFill');if(fill)fill.style.transform=`scaleX(${ratio})`;};
+caption.addEventListener('scroll',progressFill,{passive:true});
+let started=false;
+function openGift(){
+ if(started)return;
+ started=true;
+ giftScene.classList.add('open');
+ // The lid opens first; then the gift fades away and Pou appears.
+ setTimeout(()=>giftScene.classList.add('hidden'),620);
+ setTimeout(()=>{giftScene.remove();pou.classList.add('show')},1120);
+ // Keep Pou visible while the love message fades in below.
+ setTimeout(()=>{pou.classList.remove('show');pou.classList.add('float')},2700);
+ setTimeout(()=>caption.classList.add('visible'),3000);
+}
+giftButton.addEventListener('click',openGift);
+
+
+// Tap Pou: briefly close the eyes, then show a small open-mouth expression.
+let pouTapBusy=false;
+function animatePouTap(){
+ if(!started || pouTapBusy)return;
+ pouTapBusy=true;
+ const rows=cleanArt.split('\n');
+ const eyeRow=rows.findIndex(row=>row.includes('#@@.') && row.includes('@@#'));
+ art.classList.remove('blink');
+ void art.offsetWidth;
+ art.classList.add('blink');
+ const paintEyes=(left,right)=>{
+  if(eyeRow<0)return;
+  const frame=rows.slice();
+  frame[eyeRow]=frame[eyeRow].replace('#@@.',left).replace('@@#',right);
+  art.textContent=frame.join('\n');
+ };
+ // A soft squint, a full blink, then a quick playful second blink.
+ paintEyes('#--.','--#');
+ setTimeout(()=>paintEyes('----','---'),75);
+ setTimeout(()=>paintEyes('#@@.','@@#'),185);
+ setTimeout(()=>paintEyes('----','---'),285);
+ setTimeout(()=>{art.textContent=cleanArt;art.classList.remove('blink');},365);
+ setTimeout(()=>{mouthPop.classList.remove('show');void mouthPop.offsetWidth;mouthPop.classList.add('show');},190);
+ setTimeout(()=>{pouTapBusy=false;},720);
+}
+art.addEventListener('click',animatePouTap);
+
+// Tap the ASCII heart: burst into tiny pink particles.
+function popHeart(){
+ if(!started || heart.classList.contains('popped'))return;
+ const rect=heart.getBoundingClientRect();
+ const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+ heart.classList.add('popped');
+ for(let i=0;i<22;i++){
+  const dot=document.createElement('span');dot.className='heart-particle';dot.textContent=i%3===0?'♥':(i%2?'·':'✦');
+  dot.style.left=`${cx}px`;dot.style.top=`${cy}px`;
+  const angle=Math.PI*2*i/22+(Math.random()-.5)*.35;
+  const distance=35+Math.random()*65;
+  dot.style.setProperty('--dx',`${Math.cos(angle)*distance}px`);
+  dot.style.setProperty('--dy',`${Math.sin(angle)*distance}px`);
+  document.body.appendChild(dot);setTimeout(()=>dot.remove(),950);
+ }
+ // Bring the heart back after the burst so it can be tapped again.
+ setTimeout(()=>{
+  heart.classList.remove('popped');
+  heart.classList.remove('returning');
+  void heart.offsetWidth;
+  heart.classList.add('returning');
+  setTimeout(()=>heart.classList.remove('returning'),1000);
+ },3000);
+}
+heart.addEventListener('click',popHeart);
+heart.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();popHeart();}});
+
+// Quiet, warm fireflies drifting in the dark background, clipped to the screen.
+const canvas=document.getElementById('fireflies'),ctx=canvas.getContext('2d');
+let w=0,h=0,dpr=1,flies=[];
+function resize(){
+ dpr=Math.min(window.devicePixelRatio||1,2);w=canvas.clientWidth;h=canvas.clientHeight;
+ canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ flies=Array.from({length:34},()=>({x:Math.random()*w,y:Math.random()*h,r:.7+Math.random()*1.5,a:Math.random()*Math.PI*2,s:.12+Math.random()*.32,p:Math.random()*Math.PI*2}));
+}
+function draw(){
+ ctx.clearRect(0,0,w,h);
+ for(const f of flies){
+  f.a+=.004*f.s;f.p+=.025*f.s;
+  f.x+=Math.sin(f.a)*.22;f.y-=f.s*.22;
+  if(f.y<-8){f.y=h+8;f.x=Math.random()*w}
+  if(f.x<-8)f.x=w+8;if(f.x>w+8)f.x=-8;
+  const pulse=.35+.45*(.5+.5*Math.sin(f.p));
+  const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y, f.r*5.5);
+  glow.addColorStop(0,`rgba(242,183,207,${pulse*.8})`);
+  glow.addColorStop(.28,`rgba(226,151,183,${pulse*.22})`);
+  glow.addColorStop(1,'rgba(226,151,183,0)');
+  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(f.x,f.y,f.r*5.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=`rgba(255,218,233,${pulse})`;ctx.beginPath();ctx.arc(f.x,f.y,f.r*.7,0,Math.PI*2);ctx.fill();
+ }
+ requestAnimationFrame(draw);
+}
+resize();window.addEventListener('resize',resize);draw();
+</script>
+</body>
+</html>
